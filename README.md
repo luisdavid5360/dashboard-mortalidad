@@ -110,38 +110,38 @@ Visualizaciones y hallazgos
 Muestra la distribución de las muertes por departamento en 2019.
 Se observa una mayor concentración en Bogotá, Antioquia y Valle del Cauca, reflejando su alta densidad poblacional.
 
-![Grafica 1](G1.png)
+![Grafica 1](assets/G1.png)
 
 
  2. Muertes por Mes
 
 Evidencia un comportamiento estacional, con picos notables hacia los meses de julio y diciembre.
-![Grafica 2](G2.png)
+![Grafica 2](assets/G2.png)
 
 
  3. Ciudades Más Violentas
 
 Identifica los municipios con más muertes violentas (CIE-10 X95–X99).
 Se destacan ciudades grandes con mayores tasas de homicidio.
-![Grafica 3](G3.png)
+![Grafica 3](assets/G3.png)
 
 4.Ciudades con menor Mortaliada
 Ilustra en un grafico circular las ciudades con menor mortalidad
-![Grafica 4](G4.png)
+![Grafica 4](assets/G4.png)
 
  5. Principales Causas de Muerte
 
 Las principales causas incluyen enfermedades cardiovasculares, cáncer y enfermedades respiratorias, según los códigos CIE-10.
-![Grafica 5](G5.png)
+![Grafica 5](assets/G5.png)
 
 
  6. Muertes por Sexo
 Se evidencia una mayor mortalidad masculina en edades productivas y una tendencia al aumento en la vejez.
-![Grafica 6](G6.png)
+![Grafica 6](assets/G6.png)
 
  7. Distribución y Edad
 Grafico de barras donde se ilustra el grupo etario que mes mortalidad tiene.
-![Grafica 7](G7.png)
+![Grafica 7](assets/G7.png)
 
 
  Créditos
@@ -150,4 +150,5 @@ Autor: Luis David Lenes Padilla
 Programa: Maestría en Inteligencia Artificial – Universidad de La Salle
 Asignatura: Aplicaciones 1
 Año: 2025
+
 
