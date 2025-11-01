@@ -54,8 +54,7 @@ Port: 8080 (automático).
 
 Desplegar y verificar los logs de ejecución.
 
-Publicar la URL generada, por ejemplo:
- https://king-prawn-app-ywaxt.ondigitalocean.app
+la URL generada en Digital Ocean:  https://king-prawn-app-ywaxt.ondigitalocean.app
 
 Software utilizado
 
@@ -132,6 +131,7 @@ Autor: Luis David Lenes Padilla
 Programa: Maestría en Inteligencia Artificial – Universidad de La Salle
 Asignatura: Aplicaciones 1
 Año: 2025
+
 
 
 
