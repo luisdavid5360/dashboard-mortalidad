@@ -1,4 +1,6 @@
-# src/callbacks.py — Lectura de datos, procesamiento y callbacks interactivos
+# ============================================
+# src/callbacks.py — Lectura de datos y callbacks interactivos optimizados
+# ============================================
 
 import json
 from pathlib import Path
@@ -10,11 +12,14 @@ from src.app import app
 # ==========================
 # Archivos de datos
 # ==========================
-# Apunta a la carpeta /data en la raíz del proyecto (Render ejecuta desde /opt/render/project/src)
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+BASE_DIR = Path(__file__).resolve().parents[1]  # /src
+DATA_DIR = BASE_DIR.parent / "data"  # /data en raíz
 
 print("📂 Verificando carpeta de datos:", DATA_DIR)
-print("📄 Archivos disponibles:", [p.name for p in DATA_DIR.glob('*')])
+if DATA_DIR.exists():
+    print("📄 Archivos disponibles:", [f.name for f in DATA_DIR.glob('*')])
+else:
+    print("⚠️ Carpeta de datos no encontrada")
 
 FILE_MAIN = DATA_DIR / "NoFetal2019_CE_15-03-23.xlsx"
 FILE_DIVI = DATA_DIR / "Divipola_CE_.xlsx"
@@ -41,12 +46,28 @@ def _zfill(s, n):
     return str(s).split(".")[0].zfill(n) if pd.notna(s) else None
 
 
+# ==========================
+# Cargar y procesar los datos
+# ==========================
 def load_data():
     print("🔄 Cargando datos desde Excel...")
-    df = pd.read_excel(FILE_MAIN, engine="openpyxl")
-    divi = pd.read_excel(FILE_DIVI, engine="openpyxl")
-    cod = pd.read_excel(FILE_CODIGOS, engine="openpyxl")
 
+    # 🧠 OPTIMIZACIÓN: Limitar columnas y filas para evitar OOM (Out Of Memory)
+    usecols = [
+        "COD_DEPARTAMENTO", "COD_MUNICIPIO",
+        "SEXO", "MES_DEF", "COD_MUERTE", "GRUPO_EDAD1"
+    ]
+    try:
+        df = pd.read_excel(FILE_MAIN, usecols=usecols, engine="openpyxl", nrows=20000)
+        divi = pd.read_excel(FILE_DIVI, engine="openpyxl")
+        cod = pd.read_excel(FILE_CODIGOS, engine="openpyxl")
+    except Exception as e:
+        print(f"❌ Error cargando archivos Excel: {e}")
+        return pd.DataFrame()
+
+    print("✅ Datos base cargados:", df.shape)
+
+    # ---- Procesamiento de columnas ----
     df["COD_DEPARTAMENTO"] = df["COD_DEPARTAMENTO"].apply(lambda x: _zfill(x, 2))
     df["COD_MUNICIPIO"] = df["COD_MUNICIPIO"].apply(lambda x: _zfill(x, 5))
 
@@ -54,20 +75,11 @@ def load_data():
     sexo_map = {1: "Hombre", 2: "Mujer", "1": "Hombre", "2": "Mujer"}
     df["SEXO"] = df["SEXO"].map(sexo_map).fillna(df["SEXO"])
 
-    # ===============================
     # Mes
-    # ===============================
-    if "MES" in df.columns:
-        df["MES"] = pd.to_numeric(df["MES"], errors="coerce").clip(1, 12)
-    elif "MES_DEF" in df.columns:
-        df["MES"] = pd.to_numeric(df["MES_DEF"], errors="coerce").clip(1, 12)
-    elif "FECHA_DEF" in df.columns:
-        df["MES"] = pd.to_datetime(df["FECHA_DEF"], errors="coerce").dt.month
-    else:
-        df["MES"] = pd.NA
+    df["MES"] = pd.to_numeric(df.get("MES_DEF", pd.NA), errors="coerce").clip(1, 12)
     print("📆 Valores únicos de MES:", df["MES"].dropna().unique())
 
-    # Nombres de dptos y municipios
+    # Nombres de departamentos y municipios
     divi["COD_DEPARTAMENTO"] = divi["COD_DEPARTAMENTO"].apply(lambda x: _zfill(x, 2))
     divi["COD_MUNICIPIO"] = divi["COD_MUNICIPIO"].apply(lambda x: _zfill(x, 5))
 
@@ -76,7 +88,7 @@ def load_data():
     df = df.merge(divi[["COD_MUNICIPIO", "MUNICIPIO"]].drop_duplicates(),
                   on="COD_MUNICIPIO", how="left")
 
-    # Códigos CIE10
+    # Códigos CIE-10
     df["COD_MUERTE"] = df["COD_MUERTE"].astype(str).str.strip().str.upper()
     cod["COD_CIE_10"] = cod["COD_CIE_10"].astype(str).str.strip().str.upper()
 
@@ -87,7 +99,7 @@ def load_data():
         on="COD_MUERTE", how="left"
     )
 
-    # Agrupar grupos de edad
+    # ---- Agrupar edades ----
     def agrupar(grupo):
         try:
             g = int(grupo)
@@ -109,22 +121,17 @@ def load_data():
     df["GRUPO_EDAD_CAT"] = pd.Categorical(df["GRUPO_EDAD_CAT"],
                                           categories=EDAD_CATS_ORD, ordered=True)
 
-    print("✅ Total de filas cargadas:", len(df))
-    print("📋 Columnas del DataFrame:", df.columns.tolist())
+    print("✅ Data procesada. Filas finales:", len(df))
     return df
 
 
 # ==========================
-# Intentar cargar los datos
+# Cargar datos globales
 # ==========================
-try:
-    DF = load_data()
-except Exception as e:
-    print("❌ Error al cargar los datos:", e)
-    DF = pd.DataFrame()  # Evita que la app falle si Render no encuentra archivos
+DF = load_data()
 
 # ==========================
-# Callbacks (sidebar)
+# Callbacks del dashboard
 # ==========================
 TABS = [
     ("mapa", "Mapa nacional"),
@@ -148,12 +155,6 @@ def render_tab(*args):
         tab_id = ctx.triggered[0]["prop_id"].split(".")[0].replace("tab-", "")
     print("📍 Callback ejecutado, pestaña seleccionada:", tab_id)
 
-    if DF.empty:
-        return html.Div(
-            "⚠️ No se pudieron cargar los datos. Verifica la carpeta /data en Render.",
-            style={"textAlign": "center", "color": "#B22222", "padding": "40px"}
-        )
-
     # ====== Mapa ======
     if tab_id == "mapa":
         by_dep = DF.groupby("DEPARTAMENTO").size().reset_index(name="Defunciones")
@@ -172,7 +173,7 @@ def render_tab(*args):
                 x="Defunciones", y="DEPARTAMENTO", orientation="h",
                 title="Defunciones por departamento (GeoJSON no encontrado)"
             )
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     # ====== Muertes por mes ======
     if tab_id == "meses":
@@ -180,7 +181,7 @@ def render_tab(*args):
         serie["Mes"] = serie["MES"].map(MESES_LABELS)
         fig = px.line(serie, x="Mes", y="Defunciones", markers=True,
                       title="Total de muertes por mes (2019)")
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     # ====== Ciudades más violentas ======
     if tab_id == "violencia":
@@ -199,18 +200,14 @@ def render_tab(*args):
             color_continuous_scale="Reds",
             title="5 ciudades más violentas (CIE-10 X95–X99)"
         )
-        fig.update_layout(
-            xaxis_title="Municipio", yaxis_title="Número de casos",
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
-        )
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     # ====== Ciudades con menor mortalidad ======
     if tab_id == "bajas":
         bajas = DF.groupby("MUNICIPIO").size().reset_index(name="Casos").nsmallest(10, "Casos")
         fig = px.pie(bajas, names="MUNICIPIO", values="Casos",
                      title="10 ciudades con menor mortalidad")
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     # ====== Principales causas de muerte ======
     if tab_id == "causas":
@@ -245,7 +242,7 @@ def render_tab(*args):
         sexo_dep = DF.groupby(["DEPARTAMENTO", "SEXO"]).size().reset_index(name="Casos")
         fig = px.bar(sexo_dep, x="DEPARTAMENTO", y="Casos", color="SEXO",
                      barmode="stack", title="Muertes por sexo y departamento")
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     # ====== Distribución por edad ======
     if tab_id == "edad":
@@ -253,6 +250,6 @@ def render_tab(*args):
         fig = px.bar(hist, x="GRUPO_EDAD_CAT", y="Defunciones",
                      title="Distribución de muertes por grupo de edad")
         fig.update_xaxes(categoryorder="array", categoryarray=EDAD_CATS_ORD)
-        return dcc.Graph(figure=fig)
+        return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     return html.Div("Selecciona una pestaña válida.")
