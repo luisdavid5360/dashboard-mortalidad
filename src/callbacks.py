@@ -10,10 +10,11 @@ from src.app import app
 # ==========================
 # Archivos de datos
 # ==========================
-BASE_DIR = Path(__file__).resolve().parent  # src/
-# apuntar a la carpeta data ubicada en la raíz del proyecto
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+# Apunta a la carpeta /data en la raíz del proyecto (Render ejecuta desde /opt/render/project/src)
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
+print("📂 Verificando carpeta de datos:", DATA_DIR)
+print("📄 Archivos disponibles:", [p.name for p in DATA_DIR.glob('*')])
 
 FILE_MAIN = DATA_DIR / "NoFetal2019_CE_15-03-23.xlsx"
 FILE_DIVI = DATA_DIR / "Divipola_CE_.xlsx"
@@ -34,14 +35,14 @@ EDAD_CATS_ORD = [
 ]
 
 # ==========================
-# Cargar y procesar los datos
+# Funciones auxiliares
 # ==========================
 def _zfill(s, n):
     return str(s).split(".")[0].zfill(n) if pd.notna(s) else None
 
 
 def load_data():
-    print("🔄 Cargando datos...")
+    print("🔄 Cargando datos desde Excel...")
     df = pd.read_excel(FILE_MAIN, engine="openpyxl")
     divi = pd.read_excel(FILE_DIVI, engine="openpyxl")
     cod = pd.read_excel(FILE_CODIGOS, engine="openpyxl")
@@ -113,7 +114,14 @@ def load_data():
     return df
 
 
-DF = load_data()
+# ==========================
+# Intentar cargar los datos
+# ==========================
+try:
+    DF = load_data()
+except Exception as e:
+    print("❌ Error al cargar los datos:", e)
+    DF = pd.DataFrame()  # Evita que la app falle si Render no encuentra archivos
 
 # ==========================
 # Callbacks (sidebar)
@@ -139,6 +147,12 @@ def render_tab(*args):
     else:
         tab_id = ctx.triggered[0]["prop_id"].split(".")[0].replace("tab-", "")
     print("📍 Callback ejecutado, pestaña seleccionada:", tab_id)
+
+    if DF.empty:
+        return html.Div(
+            "⚠️ No se pudieron cargar los datos. Verifica la carpeta /data en Render.",
+            style={"textAlign": "center", "color": "#B22222", "padding": "40px"}
+        )
 
     # ====== Mapa ======
     if tab_id == "mapa":
@@ -242,5 +256,3 @@ def render_tab(*args):
         return dcc.Graph(figure=fig)
 
     return html.Div("Selecciona una pestaña válida.")
-
-
