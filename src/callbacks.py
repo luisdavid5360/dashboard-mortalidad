@@ -6,14 +6,24 @@ import json
 from pathlib import Path
 import pandas as pd
 import plotly.express as px
+import os
 from dash import Input, Output, html, dcc, dash_table, callback_context
 from src.app import app
 
-# ==========================
-# Archivos de datos
-# ==========================
-BASE_DIR = Path(__file__).resolve().parents[1]  # /src
-DATA_DIR = BASE_DIR.parent / "data"  # /data en raíz
+
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+# Si existe la carpeta /workspace/data (DigitalOcean) la usamos
+if Path("/workspace/data").exists():
+    DATA_DIR = Path("/workspace/data")
+else:
+    # fallback para ejecución local
+    DATA_DIR = BASE_DIR.parent / "data"
+
+print("📂 Ruta de trabajo actual:", os.getcwd())
+print("📂 Usando carpeta de datos:", DATA_DIR)
+print("📄 Archivos encontrados:", [f.name for f in DATA_DIR.glob('*')])
+
 
 print("📂 Verificando carpeta de datos:", DATA_DIR)
 if DATA_DIR.exists():
@@ -253,3 +263,4 @@ def render_tab(*args):
         return dcc.Graph(figure=fig, style={"width": "95%", "margin": "auto"})
 
     return html.Div("Selecciona una pestaña válida.")
+
