@@ -21,26 +21,8 @@ La aplicación busca:
 
 ##  Estructura del proyecto
 
-├── assets/ # Archivos estáticos (CSS, logotipos, estilos)
-   ├── style.css
-   └── logo-azul-unisalle.svg
 
-
- ├── data/ # Archivos base de datos (Excel y GeoJSON)
-   ├── NoFetal2019_CE_15-03-23.xlsx
-   ├── Divipola_CE_.xlsx
-   ├── CodigosDeMuerte_CE_15-03-23.xlsx
-   └── col_departamentos.geojson
-
-
- ├── src/ # Código fuente de la aplicación
-   ├── app.py # Definición principal de la app Dash
-   ├── layout.py # Layout con el sidebar y el contenido principal
-   └── callbacks.py # Callbacks interactivos y procesamiento de datos
-
-├── requirements.txt # Dependencias del entorno
-├── Procfile # Configuración para despliegue en la nube
-└── README.md # Documento de descripción del proyecto
+![Estructura del proyecto ](assets/estructura.png)
 
 
 ##  Requisitos
@@ -73,7 +55,7 @@ Port: 8080 (automático).
 Desplegar y verificar los logs de ejecución.
 
 Publicar la URL generada, por ejemplo:
-👉 https://king-prawn-app-ywaxt.ondigitalocean.app
+ https://king-prawn-app-ywaxt.ondigitalocean.app
 
 Software utilizado
 
@@ -150,5 +132,6 @@ Autor: Luis David Lenes Padilla
 Programa: Maestría en Inteligencia Artificial – Universidad de La Salle
 Asignatura: Aplicaciones 1
 Año: 2025
+
 
 
