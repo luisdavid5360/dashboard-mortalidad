@@ -10,7 +10,9 @@ from src.app import app
 # ==========================
 # Archivos de datos
 # ==========================
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+BASE_DIR = Path(__file__).resolve().parent  # src/
+DATA_DIR = BASE_DIR / "data"  # 👈 apuntar a /src/data
+
 FILE_MAIN = DATA_DIR / "NoFetal2019_CE_15-03-23.xlsx"
 FILE_DIVI = DATA_DIR / "Divipola_CE_.xlsx"
 FILE_CODIGOS = DATA_DIR / "CodigosDeMuerte_CE_15-03-23.xlsx"
@@ -238,3 +240,4 @@ def render_tab(*args):
         return dcc.Graph(figure=fig)
 
     return html.Div("Selecciona una pestaña válida.")
+
