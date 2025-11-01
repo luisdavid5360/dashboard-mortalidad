@@ -18,3 +18,4 @@ server = app.server
 # Configurar layout
 app.layout = get_layout()
 app.validation_layout = app.layout
+app = Dash(__name__, suppress_callback_exceptions=True, serve_locally=True)
