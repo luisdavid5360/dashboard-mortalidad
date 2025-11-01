@@ -7,15 +7,17 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 ASSETS_DIR = BASE_DIR / "assets"
 
+# ✅ Instancia única de la app
 app = Dash(
     __name__,
-    assets_folder=str(ASSETS_DIR),  # 👈 Dash usará esta carpeta sí o sí
+    assets_folder=str(ASSETS_DIR),  # Dash usará esta carpeta sí o sí
     suppress_callback_exceptions=True,
+    serve_locally=True,  # 👈 agrégalo aquí, no repitas la app
     title="Mortalidad Colombia 2019"
 )
+
 server = app.server
 
-# Configurar layout
+# ✅ Configurar layout
 app.layout = get_layout()
 app.validation_layout = app.layout
-app = Dash(__name__, suppress_callback_exceptions=True, serve_locally=True)
